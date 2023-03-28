@@ -7,21 +7,27 @@ import (
 )
 
 type ChatGpt struct {
-	client *openai.Client
+	Client *openai.Client
+	Model  string
+	Role   string
 }
 
-func NewChatGpt(apiKey string) *ChatGpt {
-	return &ChatGpt{client: openai.NewClient(apiKey)}
+func NewChatGpt(client *openai.Client, model string, role string) *ChatGpt {
+	return &ChatGpt{
+		Client: client,
+		Model:  model,
+		Role:   role,
+	}
 }
 
-func (c *ChatGpt) Talk(ctx context.Context, message string) (response *string, err error) {
-	resp, err := c.client.CreateChatCompletion(
+func (c *ChatGpt) TalkBatchResponse(ctx context.Context, message string) (*string, error) {
+	response, err := c.Client.CreateChatCompletion(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
+			Model: c.Model,
 			Messages: []openai.ChatCompletionMessage{
 				{
-					Role:    openai.ChatMessageRoleUser,
+					Role:    c.Role,
 					Content: message,
 				},
 			},
@@ -31,6 +37,6 @@ func (c *ChatGpt) Talk(ctx context.Context, message string) (response *string, e
 		return nil, err
 	}
 
-	text := &resp.Choices[0].Message.Content
-	return text, nil
+	content := &response.Choices[0].Message.Content
+	return content, nil
 }

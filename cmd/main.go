@@ -3,12 +3,13 @@ package main
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/sashabaranov/go-openai"
 	"github.com/sesaquecruz/go-openai-chatgpt/external"
+	"github.com/sesaquecruz/go-openai-chatgpt/internal"
 )
 
 func main() {
@@ -22,21 +23,14 @@ func main() {
 		log.Fatal("the API_KEY was not found in the .env file")
 	}
 
-	chatGpt := external.NewChatGpt(apiKey)
+	ctx := context.Background()
 	reader := bufio.NewReader(os.Stdin)
+	writer := bufio.NewWriter(os.Stdout)
+	chatGpt := external.NewChatGpt(
+		openai.NewClient(apiKey),
+		openai.GPT3Dot5Turbo,
+		openai.ChatMessageRoleUser,
+	)
 
-	for {
-		fmt.Print("\n> ")
-		message, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-
-		response, err := chatGpt.Talk(context.Background(), message)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		fmt.Printf("\n\n%s\n\n", *response)
-	}
+	internal.ChatBatchResponse(ctx, reader, writer, chatGpt)
 }
