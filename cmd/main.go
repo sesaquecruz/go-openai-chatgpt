@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -12,25 +13,45 @@ import (
 	"github.com/sesaquecruz/go-openai-chatgpt/internal"
 )
 
+func menu() (int, error) {
+	fmt.Println("\nSelect an option:")
+	fmt.Println("[1] Batch mode")
+	fmt.Println("[2] Stream mode")
+	fmt.Print("\n[?] ")
+
+	var option int
+	_, err := fmt.Scan(&option)
+	if err != nil || option < 1 || option > 2 {
+		return 0, err
+	}
+
+	return option, nil
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("the .env file was not found")
+		log.Fatalln("the .env file was not found")
 	}
 
 	apiKey, ok := os.LookupEnv("API_KEY")
 	if !ok {
-		log.Fatal("the API_KEY was not found in the .env file")
+		log.Fatalln("the API_KEY was not found in the .env file")
 	}
 
 	ctx := context.Background()
 	reader := bufio.NewReader(os.Stdin)
 	writer := bufio.NewWriter(os.Stdout)
-	chatGpt := external.NewChatGpt(
-		openai.NewClient(apiKey),
-		openai.GPT3Dot5Turbo,
-		openai.ChatMessageRoleUser,
-	)
+	chatGpt3 := external.NewChatGpt3(openai.NewClient(apiKey))
 
-	internal.ChatBatchResponse(ctx, reader, writer, chatGpt)
+	option, err := menu()
+	if err != nil {
+		log.Fatalln("invalid option")
+	}
+
+	if option == 1 {
+		internal.StartChatBatch(ctx, reader, writer, chatGpt3)
+	} else {
+		internal.StartChatStream(ctx, reader, writer, chatGpt3)
+	}
 }
