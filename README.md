@@ -1,5 +1,8 @@
 # ChatGPT-3 CLI
 
+[![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE)
+![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)
+
 This is a simple command-line interface (CLI) application that uses the OpenAI API to interact with ChatGPT using the terminal.
 
 ## Requirements
