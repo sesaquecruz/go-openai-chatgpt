@@ -2,14 +2,16 @@ package internal
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"log"
 
 	"github.com/sesaquecruz/go-openai-chatgpt/external"
 )
 
-func StartChat(ctx context.Context, reader *bufio.Reader, writer *bufio.Writer, chatGpt external.ChatGpt) {
-	writer.WriteString("\n[Press 'ctrl + c' to exit]\n")
+func StartChat(ctx context.Context, chatGpt external.ChatGpt, reader *bufio.Reader, writer *bufio.Writer) {
+	writer.WriteString("\n[Press 'ctrl + c' to exit]")
+	writer.WriteString("\n[Enter 'clear' to clear the context]\n")
 	if err := writer.Flush(); err != nil {
 		log.Panicln(err)
 	}
@@ -23,27 +25,41 @@ func StartChat(ctx context.Context, reader *bufio.Reader, writer *bufio.Writer, 
 	}
 
 	for {
-		writer.WriteString("\n> ")
+		writer.WriteString("\n > ")
 		if err := writer.Flush(); err != nil {
 			log.Panicln(err)
 		}
 
-		message, err := reader.ReadString('\n')
+		userMessage, err := reader.ReadString('\n')
 		if err != nil {
 			log.Panicln(err)
 		}
+
+		userMessage = userMessage[:len(userMessage)-1]
+
+		if len(userMessage) == 0 {
+			continue
+		}
+
+		if userMessage == "clear" {
+			chatGpt.ClearMessages()
+			continue
+		}
+
+		chatGpt.AddUserMessage(userMessage)
+
+		response := make(chan string, 2)
+		var gptMessage bytes.Buffer
+
+		go chatGpt.UpdateChat(ctx, response)
 
 		writer.WriteString("\n\n")
 		if err := writer.Flush(); err != nil {
 			log.Panicln(err)
 		}
 
-		message = message[:len(message)-1]
-		response := make(chan string, 2)
-
-		go chatGpt.Talk(ctx, message, response)
-
 		for content := range response {
+			gptMessage.WriteString(content)
 			writer.WriteString(content)
 			writer.Flush()
 		}
@@ -52,5 +68,7 @@ func StartChat(ctx context.Context, reader *bufio.Reader, writer *bufio.Writer, 
 		if err := writer.Flush(); err != nil {
 			log.Panicln(err)
 		}
+
+		chatGpt.AddGptMessage(gptMessage.String())
 	}
 }

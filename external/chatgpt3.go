@@ -1,7 +1,6 @@
 package external
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -24,15 +23,30 @@ func NewChatGpt3(client *openai.Client) *ChatGpt3 {
 	}
 }
 
-func (c *ChatGpt3) Talk(ctx context.Context, message string, response chan<- string) {
-	defer close(response)
+func (c *ChatGpt3) ClearMessages() {
+	c.Messages = make([]openai.ChatCompletionMessage, 0)
+}
 
-	userMessage := openai.ChatCompletionMessage{
+func (c *ChatGpt3) AddUserMessage(content string) {
+	message := openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleUser,
-		Content: message,
+		Content: content,
 	}
 
-	c.Messages = append(c.Messages, userMessage)
+	c.Messages = append(c.Messages, message)
+}
+
+func (c *ChatGpt3) AddGptMessage(content string) {
+	message := openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleAssistant,
+		Content: content,
+	}
+
+	c.Messages = append(c.Messages, message)
+}
+
+func (c *ChatGpt3) UpdateChat(ctx context.Context, response chan<- string) {
+	defer close(response)
 
 	request := openai.ChatCompletionRequest{
 		Model:    c.Model,
@@ -46,36 +60,16 @@ func (c *ChatGpt3) Talk(ctx context.Context, message string, response chan<- str
 	}
 	defer stream.Close()
 
-	var responseBuffer bytes.Buffer
-
 	for {
 		data, err := stream.Recv()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				break
+				return
 			}
 
 			log.Panicln(err)
 		}
 
-		content := data.Choices[0].Delta.Content
-
-		_, err = responseBuffer.WriteString(content)
-		if err != nil {
-			log.Panicln(err)
-		}
-
-		response <- content
+		response <- data.Choices[0].Delta.Content
 	}
-
-	gptMessage := openai.ChatCompletionMessage{
-		Role:    openai.ChatMessageRoleAssistant,
-		Content: responseBuffer.String(),
-	}
-
-	c.Messages = append(c.Messages, gptMessage)
-}
-
-func (c *ChatGpt3) ClearHistory() {
-	c.Messages = make([]openai.ChatCompletionMessage, 0)
 }
