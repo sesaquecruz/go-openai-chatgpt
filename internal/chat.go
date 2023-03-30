@@ -3,43 +3,21 @@ package internal
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/sesaquecruz/go-openai-chatgpt/external"
 )
 
-func StartChatBatch(ctx context.Context, reader *bufio.Reader, writer *bufio.Writer, chatGpt external.ChatGpt) {
-	writer.WriteString("\nChatGpt (batch response mode)\n\n")
+func StartChat(ctx context.Context, reader *bufio.Reader, writer *bufio.Writer, chatGpt external.ChatGpt) {
+	writer.WriteString("\n[Press 'ctrl + c' to exit]\n")
 	if err := writer.Flush(); err != nil {
 		log.Panicln(err)
 	}
 
-	for {
-		writer.WriteString("\n> ")
-		if err := writer.Flush(); err != nil {
-			log.Panicln(err)
-		}
-
-		message, err := reader.ReadString('\n')
-		if err != nil {
-			log.Panicln(err)
-		}
-
-		response, err := chatGpt.TalkBatch(ctx, message)
-		if err != nil {
-			log.Panicln(err)
-		}
-
-		writer.WriteString(fmt.Sprintf("\n\n%s\n\n", *response))
-		if err := writer.Flush(); err != nil {
-			log.Panicln(err)
-		}
-	}
-}
-
-func StartChatStream(ctx context.Context, reader *bufio.Reader, writer *bufio.Writer, chatGpt external.ChatGpt) {
-	writer.WriteString("\nChatGpt (stream response mode)\n\n")
+	writer.WriteString("\n  _______        __  ________  __________\n")
+	writer.WriteString(" / ___/ /  ___ _/ /_/ ___/ _ \\/_  __/_  /\n")
+	writer.WriteString("/ /__/ _ \\/ _ `/ __/ (_ / ___/ / / _/_ <\n")
+	writer.WriteString("\\___/_//_/\\_,_/\\__/\\___/_/    /_/ /____/\n\n")
 	if err := writer.Flush(); err != nil {
 		log.Panicln(err)
 	}
@@ -60,8 +38,10 @@ func StartChatStream(ctx context.Context, reader *bufio.Reader, writer *bufio.Wr
 			log.Panicln(err)
 		}
 
-		response := make(chan string)
-		go chatGpt.TalkStream(ctx, message, response)
+		message = message[:len(message)-1]
+		response := make(chan string, 2)
+
+		go chatGpt.Talk(ctx, message, response)
 
 		for content := range response {
 			writer.WriteString(content)

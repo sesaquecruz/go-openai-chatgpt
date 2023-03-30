@@ -1,6 +1,7 @@
 package external
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -10,50 +11,33 @@ import (
 )
 
 type ChatGpt3 struct {
-	Client *openai.Client
-	Model  string
-	Role   string
+	Client   *openai.Client
+	Model    string
+	Messages []openai.ChatCompletionMessage
 }
 
 func NewChatGpt3(client *openai.Client) *ChatGpt3 {
 	return &ChatGpt3{
-		Client: client,
-		Model:  openai.GPT3Dot5Turbo,
-		Role:   openai.ChatMessageRoleUser,
+		Client:   client,
+		Model:    openai.GPT3Dot5Turbo0301,
+		Messages: make([]openai.ChatCompletionMessage, 0),
 	}
 }
 
-func (c *ChatGpt3) TalkBatch(ctx context.Context, message string) (*string, error) {
-	request := openai.ChatCompletionRequest{
-		Model: c.Model,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    c.Role,
-				Content: message,
-			},
-		},
-	}
-
-	response, err := c.Client.CreateChatCompletion(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-
-	return &response.Choices[0].Message.Content, nil
-}
-
-func (c *ChatGpt3) TalkStream(ctx context.Context, message string, response chan<- string) {
+func (c *ChatGpt3) Talk(ctx context.Context, message string, response chan<- string) {
 	defer close(response)
 
+	userMessage := openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleUser,
+		Content: message,
+	}
+
+	c.Messages = append(c.Messages, userMessage)
+
 	request := openai.ChatCompletionRequest{
-		Model: c.Model,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    c.Role,
-				Content: message,
-			},
-		},
-		Stream: true,
+		Model:    c.Model,
+		Messages: c.Messages,
+		Stream:   true,
 	}
 
 	stream, err := c.Client.CreateChatCompletionStream(ctx, request)
@@ -62,16 +46,36 @@ func (c *ChatGpt3) TalkStream(ctx context.Context, message string, response chan
 	}
 	defer stream.Close()
 
+	var responseBuffer bytes.Buffer
+
 	for {
 		data, err := stream.Recv()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				return
+				break
 			}
 
 			log.Panicln(err)
 		}
 
-		response <- data.Choices[0].Delta.Content
+		content := data.Choices[0].Delta.Content
+
+		_, err = responseBuffer.WriteString(content)
+		if err != nil {
+			log.Panicln(err)
+		}
+
+		response <- content
 	}
+
+	gptMessage := openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleAssistant,
+		Content: responseBuffer.String(),
+	}
+
+	c.Messages = append(c.Messages, gptMessage)
+}
+
+func (c *ChatGpt3) ClearHistory() {
+	c.Messages = make([]openai.ChatCompletionMessage, 0)
 }
