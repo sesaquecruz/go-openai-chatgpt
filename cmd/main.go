@@ -21,11 +21,11 @@ func main() {
 	}
 
 	client := openai.NewClient(apiKey)
+	chatGpt3 := external.NewChatGpt3(client)
 
 	ctx := context.Background()
 	reader := bufio.NewReader(os.Stdin)
 	writer := bufio.NewWriter(os.Stdout)
-	chatGpt3 := external.NewChatGpt3(client)
 
-	internal.StartChat(ctx, reader, writer, chatGpt3)
+	internal.StartChat(ctx, chatGpt3, reader, writer)
 }
