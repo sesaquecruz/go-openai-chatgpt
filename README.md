@@ -80,13 +80,25 @@ Possible but unknown.
  > Tell me more.
 
 
-The existence of other forms of life or intelligent civilization in the universe is currently unknown and has not been confirmed. However, given the vastness and complexity of the universe, it is likely that there are other forms of life or intelligent civilizations out there, possibly in other galaxies or even in our own galaxy. This is a topic of ongoing research and exploration in the field of astronomy and astrobiology.
+The existence of other forms of life or intelligent civilization 
+in the universe is currently unknown and has not been confirmed. 
+However, given the vastness and complexity of the universe, it is
+likely that there are other forms of life or intelligent 
+civilizations out there, possibly in other galaxies or even in our 
+own galaxy. This is a topic of ongoing research and exploration in 
+the field of astronomy and astrobiology.
 
 
  > In Portuguese, please?
 
 
-A existência de outras formas de vida ou civilização inteligente no universo é atualmente desconhecida e não foi confirmada. No entanto, dada a imensidão e a complexidade do universo, é provável que haja outras formas de vida ou civilizações inteligentes por aí, possivelmente em outras galáxias ou até mesmo em nossa própria galáxia. Este é um tópico de pesquisa e exploração em curso no campo da astronomia e astrobiologia.
+A existência de outras formas de vida ou civilização inteligente no
+universo é atualmente desconhecida e não foi confirmada. No entanto, 
+dada a imensidão e a complexidade do universo, é provável que haja 
+outras formas de vida ou civilizações inteligentes por aí, possivelmente 
+em outras galáxias ou até mesmo em nossa própria galáxia. Este é um 
+tópico de pesquisa e exploração em curso no campo da astronomia e 
+astrobiologia.
 
 
  > clear
