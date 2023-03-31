@@ -65,7 +65,7 @@ After the program has been started, you can start chatting with ChatGPT. Follow 
 \___/_//_/\_,_/\__/\___/_/    /_/ /____/
 
 
- > In one phrase, What is the universe?
+ > In one phrase, what is the universe?
 
 
 All of existence.
@@ -102,7 +102,7 @@ astrobiologia.
 
 
  > clear
-   clearing chat...
+   clearing context...
    done.
 
  > In Spanish, please?
