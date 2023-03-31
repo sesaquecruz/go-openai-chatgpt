@@ -42,7 +42,18 @@ func StartChat(ctx context.Context, chatGpt external.ChatGpt, reader *bufio.Read
 		}
 
 		if userMessage == "clear" {
+			writer.WriteString("   clearing chat...\n")
+			if err := writer.Flush(); err != nil {
+				log.Panicln(err)
+			}
+
 			chatGpt.ClearMessages()
+
+			writer.WriteString("   done.\n")
+			if err := writer.Flush(); err != nil {
+				log.Panicln(err)
+			}
+
 			continue
 		}
 
